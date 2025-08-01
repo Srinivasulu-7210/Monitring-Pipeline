@@ -35,98 +35,79 @@ Scrape product prices from websites in real time, stream data via AWS, clean/pro
 
 
 
-🛠️ Updated Components
+## 🔁 End-to-End Data Pipeline Steps
 
-🔹 Step 1: 
-Web Scraper (Lambda + EventBridge)
-Use Python Lambda with requests/BeautifulSoup
+---
 
-Schedule it every 5 mins
+### 🔹 Step 1: Web Scraper (Lambda + EventBridge)
+- Use a Python AWS Lambda function with `requests` and `BeautifulSoup`.
+- Schedule it to run every 5 minutes using Amazon EventBridge (CloudWatch Events).
+- Send scraped product price data to **Amazon Kinesis Data Streams**.
 
-Send data to Kinesis Data Stream
+---
 
-🔹 Step 2: 
-Real-Time Ingestion (Kinesis)
-Kinesis receives product price events
+### 🔹 Step 2: Real-Time Ingestion (Kinesis)
+- **Kinesis** captures real-time product price events.
+- Triggers another **Lambda** function to store incoming events into **Amazon S3 (Raw Zone)**.
 
-Trigger Lambda to store data in S3 (raw layer)
+---
 
-🔹 Step 3: 
-Raw Data Cataloging (AWS Glue Crawler)
-Catalog the raw data
+### 🔹 Step 3: Raw Data Cataloging (AWS Glue Crawler)
+- **AWS Glue Crawler** scans the S3 Raw Zone and catalogs the data in the AWS Glue Data Catalog.
+- *(Optional)*: Query the raw data directly using **Amazon Athena**.
 
-Optional: query raw data via Athena
+---
 
-🔹 Step 4:
-Data Processing on Amazon EMR
-Use Spark (PySpark) on EMR cluster
+### 🔹 Step 4: Data Processing on Amazon EMR
+- Use **Apache Spark** (PySpark) running on **Amazon EMR**.
+- Read from the **S3 Raw Zone**.
+- Clean and transform data:
+  - Cast `price` to float
+  - Deduplicate records
+- Write the cleaned data to the **S3 Processed Zone** in formats like **Parquet**.
 
-Read from S3 raw zone
+---
 
-Clean and transform data (e.g., cast price to float, deduplicate)
+### 🔹 Step 5: Load into Amazon Redshift
+- Use the **Redshift COPY command** or **AWS Glue Job** to load data.
+- You can:
+  - Load into an internal Redshift table
+  - Or use **Redshift Spectrum** with external tables pointing to S3
 
-Write output to S3 processed zone (e.g., Parquet)
+---
 
-🔹 Step 5: 
-Load into Redshift
-Use Redshift COPY command or AWS Glue Job
+### 🔹 Step 6: Load into Snowflake
+- Use **Snowpipe** for near real-time loading from S3.
+- Alternatively, use **Snowflake Tasks** to run scheduled batch jobs.
+- Process involves:
+  - Reading from S3 Processed Zone
+  - Using `STAGE` + `FILE FORMAT` + `COPY INTO` commands
 
-Create external table (Spectrum) or load into internal Redshift table
+---
 
-🔹 Step 6: 
-Load into Snowflake
-Use Snowpipe for continuous load
+### 🔹 Step 7: Visualization
+- Use **Amazon QuickSight** for dashboards built on Redshift.
+- For Snowflake, use:
+  - **Snowflake Snowsight**
+  - Or BI tools like **Tableau** or **Power BI**
 
-Or run scheduled jobs via Snowflake Tasks
-
-Read from S3 processed zone using Stage → File Format → Copy Into
-
-🔹 Step 7: 
-Visualization
-Amazon QuickSight for Redshift dashboard
-
-Snowflake Snowsight, Tableau, or Power BI for Snowflake
-
-
-
-🔁 Bonus ETL Workflow with EMR
-
-# PySpark on EMR
-raw_df = spark.read.json("s3://bucket/raw/")
-cleaned_df = raw_df.dropDuplicates(["product_name", "timestamp"])
-cleaned_df = cleaned_df.withColumn("price", raw_df["price"].cast("float"))
-cleaned_df.write.parquet("s3://bucket/processed/")
+---
 
 
 
 
-🧠 Tools & Skills You’ll Demonstrate
-Area	                                                  Tool/Service
-Web Scraping	                                    Python, BeautifulSoup
-Real-Time Ingestion	                             AWS Kinesis, Lambda
-Data Lake	                                   S3, Glue Crawler, Athena
-Data Processing	                                     Amazon EMR (PySpark)
-Data Warehouse	                                     Redshift, Snowflake
-BI & Dashboards	                                 QuickSight, Snowflake Snowsight
-Automation	                              EventBridge, Snowpipe, Lambda Triggers
 
-📁 Folder Structure
-pgsql
 
-real-time-pipeline/
-├── lambda/
-│   └── scraper.py
-├── emr_jobs/
-│   └── transform_data.py
-├── glue/
-│   └── crawler_config.json
-├── redshift/
-│   └── ddl.sql
-│   └── copy_command.sql
-├── snowflake/
-│   └── create_stage.sql
-│   └── copy_into.sql
-├── dashboards/
-│   └── quicksight_config.json
-├── terraform/ (optional)
-└── README.md
+## 🧠 Tools & Skills You’ll Demonstrate
+
+| **Area**               | **Tool/Service**                                      |
+|------------------------|-------------------------------------------------------|
+| Web Scraping           | Python, BeautifulSoup                                 |
+| Real-Time Ingestion    | AWS Kinesis, Lambda                                   |
+| Data Lake              | S3, Glue Crawler, Athena                              |
+| Data Processing        | Amazon EMR (PySpark)                                  |
+| Data Warehouse         | Redshift, Snowflake                                   |
+| BI & Dashboards        | QuickSight, Snowflake Snowsight                       |
+| Automation             | EventBridge, Snowpipe, Lambda Triggers                |
+
+
