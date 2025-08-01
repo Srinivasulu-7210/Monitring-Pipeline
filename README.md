@@ -8,7 +8,26 @@ Scrape product prices from websites in real time, stream data via AWS, clean/pro
 🧱 Revised Architecture:
 
 
-<pre> ``` [Lambda Web Scraper + EventBridge] ↓ [AWS Kinesis Data Streams] ↓ [AWS Lambda] ↓ [S3 Raw Zone] │ └──▶ [AWS Glue Crawler] ↓ [EMR Spark Job for Cleaning/Transforming] ↓ [S3 Processed Zone] │ │ ▼ ▼ [Redshift] [Snowflake] ▼ ▼ [Amazon QuickSight] [Snowflake Snowsight / Tableau / Power BI] ``` </pre>
+```
+[Lambda Web Scraper + EventBridge]
+              ↓
+     [AWS Kinesis Data Streams]
+              ↓
+           [AWS Lambda]
+              ↓
+          [S3 Raw Zone]
+              │
+              └──▶ [AWS Glue Crawler]
+              ↓
+[EMR Spark Job for Cleaning/Transforming]
+              ↓
+        [S3 Processed Zone]
+             │       │
+             ▼       ▼
+        [Redshift]  [Snowflake]
+             ▼           ▼
+  [Amazon QuickSight]   [Snowflake Snowsight / Tableau / Power BI]
+```
 
 
 
